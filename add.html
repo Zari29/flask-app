@@ -1,0 +1,14 @@
+<form method="POST" action="{{ url_for('add') }}">
+    {{ form.csrf_token }}
+    
+    <label>First Name:</label>
+    {{ form.fname(class="form-control") }}<br>
+
+    <label>Last Name:</label>
+    {{ form.lname(class="form-control") }}<br>
+
+    <label>Email:</label>
+    {{ form.email(class="form-control") }}<br>
+
+    {{ form.submit(class="btn btn-primary") }}
+</form>
