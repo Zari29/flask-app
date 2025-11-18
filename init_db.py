@@ -1,5 +1,6 @@
-from app import db
+from app import app, db
 
-# Create all tables defined in app.py
-db.create_all()
-print("SQLite database created successfully!")
+# Push the application context
+with app.app_context():
+    db.create_all()
+    print("SQLite database created successfully!")
