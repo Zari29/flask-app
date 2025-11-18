@@ -13,13 +13,12 @@ pipeline {
 
     // ---------- ENVIRONMENT VARIABLES ----------
     environment {
-        VERSION = "1.0.0"
+        VERSION = "1.0.1"        // UPDATED for Build #2
         APP_NAME = "FlaskApp"
     }
 
     // ---------- TOOLS ----------
     tools {
-        // Make sure this name matches Jenkins → Manage Jenkins → Tools → Maven
         maven 'MAVEN'
     }
 
@@ -29,7 +28,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building ${APP_NAME} version ${VERSION}"
-                sh 'mvn --version'     // Windows = bat 'mvn --version'
+                sh 'mvn --version'   // Windows users use: bat 'mvn --version'
                 echo "Build completed."
             }
         }
