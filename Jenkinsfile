@@ -13,8 +13,8 @@ pipeline {
 
     // ---------- ENVIRONMENT VARIABLES ----------
     environment {
-        VERSION = "1.0.1"        // UPDATED for Build #2
-        APP_NAME = "FlaskApp"
+        VERSION = "1.0.1"
+        APP_NAME = "FlaskAppFinal"    // UPDATED for Build #3
     }
 
     // ---------- TOOLS ----------
@@ -28,7 +28,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building ${APP_NAME} version ${VERSION}"
-                sh 'mvn --version'   // Windows users use: bat 'mvn --version'
+                sh 'mvn --version'   // Windows: bat 'mvn --version'
                 echo "Build completed."
             }
         }
@@ -48,6 +48,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo "Deploying application..."
+                echo "Using final build configuration..."   // NEW LINE for Build #3
                 echo "Deployment done!"
             }
         }
