@@ -15,8 +15,8 @@ pipeline {
         VERSION = "1.0.1"
         APP_NAME = "FlaskAppFinal"
         VENV = "${WORKSPACE}\\venv"
-        SONAR_TOKEN = credentials('sonarcloud-token') // Your Jenkins credential ID
-        SONAR_SCANNER = "C:\\sonar-scanner\\bin\\sonar-scanner.bat" // Change if installed elsewhere
+        SONAR_TOKEN = credentials('sonarcloud-token') // Your Jenkins secret text ID
+        SONAR_SCANNER = "C:\\sonar-scanner\\bin\\sonar-scanner.bat" // Update path if needed
     }
 
     stages {
@@ -28,7 +28,7 @@ pipeline {
                 bat 'python -m venv venv'
                 bat 'venv\\Scripts\\activate.bat && pip install --upgrade pip'
                 bat 'venv\\Scripts\\activate.bat && pip install -r requirements.txt'
-                echo "Environment setup completed."
+                echo "Python environment setup completed."
             }
         }
 
@@ -64,8 +64,8 @@ pipeline {
         // ---------- DEPLOY (Optional) ----------
         stage('Deploy') {
             steps {
-                echo "Deploying ${APP_NAME} version ${VERSION}..."
-                // Run Flask in the background so Jenkins pipeline doesn't block
+                echo "Starting Flask app in background..."
+                // Runs Flask in a separate cmd window so Jenkins pipeline continues
                 bat 'start cmd /c "venv\\Scripts\\activate.bat && set FLASK_APP=app.py && flask run --host=0.0.0.0 --port=5000"'
                 echo "Flask started in background."
             }
