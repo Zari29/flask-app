@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     // ---------- PARAMETERS ----------
@@ -14,22 +13,21 @@ pipeline {
     // ---------- ENVIRONMENT VARIABLES ----------
     environment {
         VERSION = "1.0.1"
-        APP_NAME = "FlaskAppFinal"    // UPDATED for Build #3
-    }
-
-    // ---------- TOOLS ----------
-    tools {
-        maven 'MAVEN'
+        APP_NAME = "FlaskAppFinal"
+        VENV = "${WORKSPACE}\\venv"
+        SONAR_TOKEN = credentials('sonarcloud-token') // Use the token you stored in Jenkins Credentials
     }
 
     stages {
 
-        // ---------- BUILD ----------
-        stage('Build') {
+        // ---------- SETUP ----------
+        stage('Setup') {
             steps {
-                echo "Building ${APP_NAME} version ${VERSION}"
-                sh 'mvn --version'   // Windows: bat 'mvn --version'
-                echo "Build completed."
+                echo "Setting up Python environment..."
+                bat 'python -m venv venv'
+                bat 'venv\\Scripts\\activate.bat && pip install --upgrade pip'
+                bat 'venv\\Scripts\\activate.bat && pip install -r requirements.txt'
+                echo "Environment setup completed."
             }
         }
 
@@ -40,16 +38,35 @@ pipeline {
             }
             steps {
                 echo "Running tests..."
+                bat 'venv\\Scripts\\activate.bat && pytest tests\\ --junitxml=report.xml'
                 echo "Tests completed."
             }
         }
 
-        // ---------- DEPLOY ----------
+        // ---------- SONARCLOUD SCAN ----------
+        stage('SonarCloud Analysis') {
+            steps {
+                echo "Running SonarCloud analysis..."
+                bat """
+                set SONAR_TOKEN=${SONAR_TOKEN}
+                venv\\Scripts\\activate.bat
+                sonar-scanner ^
+                  -Dsonar.organization=your_org_key ^
+                  -Dsonar.projectKey=your_project_key ^
+                  -Dsonar.sources=. ^
+                  -Dsonar.host.url=https://sonarcloud.io ^
+                  -Dsonar.login=%SONAR_TOKEN%
+                """
+                echo "SonarCloud scan completed."
+            }
+        }
+
+        // ---------- DEPLOY (Optional) ----------
         stage('Deploy') {
             steps {
-                echo "Deploying application..."
-                echo "Using final build configuration..."   // NEW LINE for Build #3
-                echo "Deployment done!"
+                echo "Deploying ${APP_NAME} version ${VERSION}..."
+                // Example: run Flask locally for testing
+                bat 'venv\\Scripts\\activate.bat && set FLASK_APP=server.py && flask run --host=0.0.0.0 --port=5000'
             }
         }
     }
