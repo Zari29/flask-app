@@ -15,7 +15,8 @@ pipeline {
         VERSION = "1.0.1"
         APP_NAME = "FlaskAppFinal"
         VENV = "${WORKSPACE}\\venv"
-        SONAR_TOKEN = credentials('sonarcloud-token') // Use the token you stored in Jenkins Credentials
+        SONAR_TOKEN = credentials('sonarcloud-token') // Your Jenkins credential ID
+        SONAR_SCANNER = "C:\\sonar-scanner\\bin\\sonar-scanner.bat" // Change if installed elsewhere
     }
 
     stages {
@@ -49,10 +50,9 @@ pipeline {
                 echo "Running SonarCloud analysis..."
                 bat """
                 set SONAR_TOKEN=${SONAR_TOKEN}
-                venv\\Scripts\\activate.bat
-                sonar-scanner ^
-                  -Dsonar.organization=your_org_key ^
-                  -Dsonar.projectKey=your_project_key ^
+                "${SONAR_SCANNER}" ^
+                  -Dsonar.organization=flaskapp ^
+                  -Dsonar.projectKey=flaskapp_flask ^
                   -Dsonar.sources=. ^
                   -Dsonar.host.url=https://sonarcloud.io ^
                   -Dsonar.login=%SONAR_TOKEN%
@@ -65,8 +65,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo "Deploying ${APP_NAME} version ${VERSION}..."
-                // Example: run Flask locally for testing
-                bat 'venv\\Scripts\\activate.bat && set FLASK_APP=server.py && flask run --host=0.0.0.0 --port=5000'
+                // Run Flask in the background so Jenkins pipeline doesn't block
+                bat 'start cmd /c "venv\\Scripts\\activate.bat && set FLASK_APP=app.py && flask run --host=0.0.0.0 --port=5000"'
+                echo "Flask started in background."
             }
         }
     }
