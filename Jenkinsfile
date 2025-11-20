@@ -19,6 +19,7 @@ pipeline {
 
     stages {
 
+        // ---------- SETUP ----------
         stage('Setup') {
             steps {
                 echo "Setting up Python environment..."
@@ -29,6 +30,7 @@ pipeline {
             }
         }
 
+        // ---------- TEST ----------
         stage('Test') {
             when {
                 expression { return params.executeTests == true }
@@ -40,6 +42,7 @@ pipeline {
             }
         }
 
+        // ---------- SONARCLOUD SCAN ----------
         stage('SonarCloud Analysis') {
             steps {
                 echo "Running SonarCloud analysis..."
@@ -48,10 +51,12 @@ pipeline {
             }
         }
 
-        stage('Deploy (Optional)') {
+        // ---------- DEPLOY (Optional) ----------
+        stage('Deploy') {
             steps {
                 echo "Starting Flask app in background..."
-                bat 'start cmd /c "${VENV}\\Scripts\\python.exe -m flask run --host=0.0.0.0 --port=5000"'
+                // Use this only if you want Flask running on the agent; pipeline continues
+                bat "start cmd /c \"${VENV}\\Scripts\\python.exe -m flask run --host=0.0.0.0 --port=5000\""
                 echo "Flask started in background."
             }
         }
