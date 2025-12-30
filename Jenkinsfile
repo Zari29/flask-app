@@ -10,61 +10,55 @@ pipeline {
     }
 
     environment {
-        VERSION = "1.0.1"
-        APP_NAME = "FlaskAppFinal"
         VENV = "${WORKSPACE}\\venv"
-        SONAR_TOKEN = credentials('sonarcloud-token') // Jenkins Secret Text
-        SONAR_SCANNER = "C:\\sonar-scanner\\bin\\sonar-scanner.bat" // Update path if needed
+        SONAR_TOKEN = credentials('sonarcloud-token')
+        SONAR_SCANNER = "C:\\sonar-scanner\\bin\\sonar-scanner.bat"
     }
 
     stages {
 
-        // ---------- SETUP ----------
         stage('Setup') {
             steps {
-                echo "Setting up Python environment..."
                 bat 'python -m venv venv'
-                bat "${VENV}\\Scripts\\pip.exe install --upgrade pip"
                 bat "${VENV}\\Scripts\\pip.exe install -r requirements.txt"
-                echo "Python environment setup completed."
             }
         }
 
-        // ---------- TEST ----------
-        stage('Test') {
+        stage('Initialize Database') {
+            steps {
+                bat """
+                ${VENV}\\Scripts\\python.exe -c "from app import db, app; app.app_context().push(); db.create_all()"
+                """
+            }
+        }
+
+        stage('PyTest Unit Tests') {
             when {
-                expression { return params.executeTests == true }
+                expression { params.executeTests }
             }
             steps {
-                echo "Running tests..."
                 bat "${VENV}\\Scripts\\pytest.exe tests\\ --junitxml=report.xml"
-                echo "Tests completed."
             }
         }
 
-        // ---------- SONARCLOUD SCAN ----------
-        stage('SonarCloud Analysis') {
+        stage('Deploy Flask App') {
             steps {
-                echo "Running SonarCloud analysis..."
-                bat "\"${SONAR_SCANNER}\" -Dsonar.organization=flaskapp -Dsonar.projectKey=flaskapp_flask -Dsonar.sources=. -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=%SONAR_TOKEN%"
-                echo "SonarCloud scan completed."
+                bat """
+                set FLASK_APP=app.py
+                start cmd /c "${VENV}\\Scripts\\python.exe -m flask run --host=0.0.0.0 --port=5000"
+                """
             }
         }
 
-        // ---------- DEPLOY (Optional) ----------
-        stage('Deploy') {
+        stage('TestNG Smoke Tests') {
             steps {
-                echo "Starting Flask app in background..."
-                // Use this only if you want Flask running on the agent; pipeline continues
-                bat "start cmd /c \"${VENV}\\Scripts\\python.exe -m flask run --host=0.0.0.0 --port=5000\""
-                echo "Flask started in background."
+                bat "mvn test -DsuiteXmlFile=testng.xml"
             }
         }
     }
 
     post {
-        success { echo "Pipeline completed successfully!" }
+        success { echo "CI/CD Pipeline executed successfully!" }
         failure { echo "Pipeline failed!" }
-        always { echo "Pipeline finished (success or fail)." }
     }
 }
